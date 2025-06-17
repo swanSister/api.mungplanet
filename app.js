@@ -9,11 +9,7 @@ const app = express();
 const PORT = 3001;
 
 // CORS 설정 (배포 도메인에 맞게 수정하세요)
-app.use(cors({
-  origin: ['https://mungplanet.com', 'https://www.mungplanet.com'],
-  methods: ['GET', 'POST', 'OPTIONS'],
-  credentials: true,
-}));
+app.use(cors()); // 모든 origin 허용
 
 app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads')); // 정적 파일 서빙
