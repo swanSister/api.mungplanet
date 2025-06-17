@@ -38,20 +38,23 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
   const imageUrl = `/uploads/${req.file.filename}`;
   res.status(201).json({ image_url: imageUrl });
 });
-
 app.post('/api/posts', async (req, res) => {
   try {
     const {
-      id, // 프론트에서 받은 id
+      id,
       name, breed, age, cause, message,
       date, password, is_public, expose_until,
       lang, image_url
     } = req.body;
 
+    const parsedAge = parseInt(age);
+    if (isNaN(parsedAge)) {
+      return res.status(400).json({ error: 'age must be a number' });
+    }
 
     await db('posts').insert({
-      id, // 프론트에서 전달받은 id 사용
-      name, breed, age, cause, message,
+      id,
+      name, breed, age: parsedAge, cause, message,
       date, password, is_public, expose_until,
       lang, image_url
     });
