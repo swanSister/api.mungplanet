@@ -39,16 +39,18 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
   res.status(201).json({ image_url: imageUrl });
 });
 
-// 📮 글 등록 API
 app.post('/api/posts', async (req, res) => {
   try {
     const {
+      id, // 프론트에서 받은 id
       name, breed, age, cause, message,
       date, password, is_public, expose_until,
       lang, image_url
     } = req.body;
 
-    const [id] = await db('posts').insert({
+
+    await db('posts').insert({
+      id, // 프론트에서 전달받은 id 사용
       name, breed, age, cause, message,
       date, password, is_public, expose_until,
       lang, image_url
@@ -60,6 +62,7 @@ app.post('/api/posts', async (req, res) => {
     res.status(500).json({ error: '등록 실패' });
   }
 });
+
 
 // 🗑 글 삭제 API (참고: 댓글은 삭제 안 함)
 app.post('/api/posts/:id/delete', async (req, res) => {

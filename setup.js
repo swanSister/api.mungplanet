@@ -4,7 +4,7 @@ async function setup() {
   const hasPosts = await db.schema.hasTable('posts');
   if (!hasPosts) {
     await db.schema.createTable('posts', table => {
-      table.increments('id').primary();
+      table.string('id').primary(); // 숫자 자동증가 대신 문자열 PK
       table.string('name');
       table.string('breed');
       table.integer('age');
@@ -15,22 +15,23 @@ async function setup() {
       table.boolean('is_public').defaultTo(true);
       table.date('expose_until').nullable();
       table.string('lang').defaultTo('ko');
-      table.string('image_url').nullable(); // ✅ 이미지 URL 필드 추가
+      table.string('image_url').nullable();
       table.timestamp('created_at').defaultTo(db.fn.now());
-    });    
+    });
+    
     console.log('✅ posts 테이블 생성 완료');
   }
 
   const hasComments = await db.schema.hasTable('comments');
   if (!hasComments) {
     await db.schema.createTable('comments', (table) => {
-      table.increments('id').primary()
-      table.integer('post_id').references('id').inTable('posts').notNullable()
-      table.string('name') // ✅ 추가
-      table.text('text').notNullable()
-      table.string('password').notNullable()
-      table.timestamp('created_at').defaultTo(db.fn.now())
-    })
+      table.increments('id').primary();
+      table.string('post_id').notNullable().references('id').inTable('posts');
+      table.string('name');
+      table.text('text').notNullable();
+      table.string('password').notNullable();
+      table.timestamp('created_at').defaultTo(db.fn.now());
+    });    
     console.log('✅ comments 테이블 생성 완료');
   }
 
