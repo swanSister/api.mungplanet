@@ -8,13 +8,19 @@ const path = require('path');
 const app = express();
 const PORT = 3001;
 
-// 미들웨어
-app.use(cors());
-app.use(bodyParser.json());
-app.use('/uploads', express.static('uploads')); // 정적 파일 (이미지) 서빙
+// CORS 설정 (배포 도메인에 맞게 수정하세요)
+app.use(cors({
+  origin: ['https://mungplanet.com', 'https://www.mungplanet.com'],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  credentials: true,
+}));
 
-// 이미지 업로드 설정
+app.use(bodyParser.json());
+app.use('/uploads', express.static('uploads')); // 정적 파일 서빙
+
+// 이미지 업로드 설정 (최대 10MB 제한)
 const upload = multer({
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
       cb(null, 'uploads/');
@@ -59,7 +65,7 @@ app.post('/api/posts', async (req, res) => {
   }
 });
 
-// 🗑 글 삭제 API
+// 🗑 글 삭제 API (참고: 댓글은 삭제 안 함)
 app.post('/api/posts/:id/delete', async (req, res) => {
   try {
     const { id } = req.params;
@@ -82,6 +88,7 @@ app.post('/api/posts/:id/delete', async (req, res) => {
   }
 });
 
+// 📰 글 리스트 조회 API
 app.get('/api/posts', async (req, res) => {
   try {
     console.log('🔍 [GET] /api/posts 요청 들어옴');
@@ -90,12 +97,11 @@ app.get('/api/posts', async (req, res) => {
       .select('id', 'name', 'age', 'breed', 'cause', 'date', 'image_url', 'is_public', 'expose_until')
       .where('is_public', true)
       .andWhere(function () {
-        this.whereNull('expose_until').orWhere('expose_until', '>=', new Date().toISOString().split('T')[0])
+        this.whereNull('expose_until').orWhere('expose_until', '>=', new Date().toISOString().split('T')[0]);
       })
       .orderBy('created_at', 'desc');
 
     console.log('✅ posts 불러오기 성공:', posts.length, '개');
-
     res.json(posts);
   } catch (err) {
     console.error('❌ /api/posts 오류:', err);
@@ -103,6 +109,7 @@ app.get('/api/posts', async (req, res) => {
   }
 });
 
+// 📰 글 상세 조회 API
 app.get('/api/posts/:id', async (req, res) => {
   try {
     const post = await db('posts').where({ id: req.params.id }).first();
@@ -112,7 +119,8 @@ app.get('/api/posts/:id', async (req, res) => {
     res.status(500).json({ error: 'DB 오류' });
   }
 });
-// 댓글 등록
+
+// 💬 댓글 등록 API
 app.post('/api/posts/:id/comments', async (req, res) => {
   const { id } = req.params;
   const { id: commentId, name, text, password } = req.body;
@@ -138,7 +146,7 @@ app.post('/api/posts/:id/comments', async (req, res) => {
   }
 });
 
-// 댓글 삭제 (작성자 또는 게시글 작성자만 가능)
+// 💬 댓글 삭제 API (작성자 또는 글 작성자만 가능)
 app.post('/api/comments/:commentId/delete', async (req, res) => {
   const { commentId } = req.params;
   const { password } = req.body;
@@ -165,7 +173,7 @@ app.post('/api/comments/:commentId/delete', async (req, res) => {
   }
 });
 
-// 댓글 조회
+// 💬 댓글 조회 API
 app.get('/api/posts/:id/comments', async (req, res) => {
   try {
     const { id } = req.params;
@@ -179,8 +187,6 @@ app.get('/api/posts/:id/comments', async (req, res) => {
     res.status(500).json({ error: '댓글 불러오기 실패' });
   }
 });
-
-
 
 // 서버 시작
 app.listen(PORT, () => {
